@@ -1,0 +1,2 @@
+ ERROR  Configuration conflict. "virtual-store-dir" may not be used with "global"
+For help, run: pnpm help add

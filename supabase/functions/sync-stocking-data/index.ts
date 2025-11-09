@@ -24,12 +24,12 @@ Deno.serve(async (req) => {
 
     console.log('Starting trout stocking data sync...');
 
-    // Fetch latest data from Virginia DWR website (last 60 days to catch updates)
+    // Fetch latest data from Virginia DWR website (last 60 days to catch updates + future scheduled stockings)
     const currentDate = new Date();
     const startDate = new Date(currentDate);
     startDate.setDate(currentDate.getDate() - 60); // 60 days back
     const endDate = new Date(currentDate);
-    endDate.setDate(currentDate.getDate()); // Only up to current date (no future dates)
+    endDate.setFullYear(currentDate.getFullYear() + 1); // Include 1 year of future scheduled stockings
 
     const startDateStr = formatDateForURL(startDate);
     const endDateStr = formatDateForURL(endDate);
