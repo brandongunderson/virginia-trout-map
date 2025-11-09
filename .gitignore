@@ -18,11 +18,7 @@
 **/downloads/
 **/eggs/
 **/.eggs/
-# Allow our project's lib/ directory for JavaScript/TypeScript
-!**/lib/
-# But ignore Python library directories
-**/python/lib/
-**/site-packages/
+**/lib/
 **/lib64/
 **/parts/
 **/sdist/
@@ -37,10 +33,6 @@
 # PyInstaller
 **/*.manifest
 **/*.spec
-
-# Python lib directories (but allow our project's lib/ directory)
-**/python/lib/
-**/site-packages/lib/
 
 # Installer logs
 **/pip-log.txt
