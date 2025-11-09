@@ -41,9 +41,6 @@ importers:
       node-html-parser:
         specifier: ^7.0.1
         version: 7.0.1
-      pnpm-store:
-        specifier: link:/tmp/pnpm-store
-        version: link:../../tmp/pnpm-store
       react:
         specifier: ^18.3.0
         version: 18.3.1
