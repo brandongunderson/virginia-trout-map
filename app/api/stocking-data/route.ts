@@ -1,50 +1,91 @@
-// API endpoint for trout stocking schedule data with caching
+// API endpoint for trout stocking schedule data from Supabase database
 
 import { NextRequest, NextResponse } from 'next/server';
-import { scrapeStockingData, filterEventsByDateRange } from '@/lib/scraper';
-import { cache } from '@/lib/cache';
+import { createClient } from '@supabase/supabase-js';
 import { StockingEvent } from '@/lib/types';
 
-const CACHE_KEY = 'stocking-data';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const forceRefresh = searchParams.get('refresh') === 'true';
-    const startDate = searchParams.get('startDate') || undefined;
-    const endDate = searchParams.get('endDate') || undefined;
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const county = searchParams.get('county');
+    const species = searchParams.get('species');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '5000');
+    const offset = (page - 1) * limit;
 
-    // Check cache first (unless force refresh)
-    let events: StockingEvent[] | null = null;
-    
-    if (!forceRefresh) {
-      events = cache.get<StockingEvent[]>(CACHE_KEY);
+    // Build query
+    let query = supabase
+      .from('trout_stocking_events')
+      .select('*', { count: 'exact' })
+      .order('stocking_date', { ascending: false });
+
+    // Apply filters
+    if (startDate) {
+      query = query.gte('stocking_date', startDate);
+    }
+    if (endDate) {
+      query = query.lte('stocking_date', endDate);
+    }
+    if (county && county !== 'all') {
+      query = query.eq('county', county);
+    }
+    if (species && species !== 'all') {
+      query = query.ilike('species', `%${species}%`);
     }
 
-    // If not cached or force refresh, scrape fresh data
-    if (!events) {
-      console.log('Fetching fresh stocking data...');
-      events = await scrapeStockingData();
-      
-      // Cache the results
-      cache.set(CACHE_KEY, events);
-      console.log(`Cached ${events.length} stocking events`);
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error('Supabase query error:', error);
+      throw error;
     }
 
-    // Apply date filters if provided
-    let filteredEvents = events;
-    if (startDate || endDate) {
-      filteredEvents = filterEventsByDateRange(events, startDate, endDate);
-    }
+    // Transform database records to StockingEvent format
+    const events = (data || []).map((record: {
+      id: number;
+      stocking_date: string;
+      location: string;
+      county: string;
+      species: string;
+      number_of_fish: number | null;
+      size: string | null;
+    }): StockingEvent => ({
+      id: record.id.toString(),
+      waterBody: record.location,
+      county: record.county,
+      species: record.species,
+      date: new Date(record.stocking_date).toISOString(),
+      numberOfFish: record.number_of_fish ?? undefined,
+      category: record.size ?? undefined,
+    }));
 
-    // Get cache status
-    const cacheStatus = cache.getStatus(CACHE_KEY);
+    // Get last sync time (most recent updated_at)
+    const { data: syncData } = await supabase
+      .from('trout_stocking_events')
+      .select('updated_at')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     return NextResponse.json({
       success: true,
-      data: filteredEvents,
-      cache: cacheStatus,
-      count: filteredEvents.length,
+      data: events,
+      count: events.length,
+      totalCount: count || 0,
+      page,
+      limit,
+      lastUpdated: syncData?.updated_at || null,
+      source: 'database',
     });
 
   } catch (error) {
@@ -62,31 +103,41 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Force refresh endpoint
+// Trigger sync endpoint - calls the edge function to sync latest data
 export async function POST() {
   try {
-    // Clear cache
-    cache.clear(CACHE_KEY);
-    
-    // Fetch fresh data
-    const events = await scrapeStockingData();
-    
-    // Cache the new data
-    cache.set(CACHE_KEY, events);
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+    // Call the sync edge function
+    const response = await fetch(`${supabaseUrl}/functions/v1/sync-stocking-data`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Sync failed');
+    }
+
+    const result = await response.json();
 
     return NextResponse.json({
       success: true,
-      message: 'Cache refreshed successfully',
-      count: events.length,
+      message: 'Data sync triggered successfully',
+      result: result.data,
     });
 
   } catch (error) {
-    console.error('Error refreshing stocking data:', error);
+    console.error('Error triggering sync:', error);
     
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to refresh stocking data',
+        error: error instanceof Error ? error.message : 'Failed to trigger sync',
       },
       { status: 500 }
     );

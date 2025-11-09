@@ -28,11 +28,11 @@ export default function ScheduleTab() {
     isLoadingEvents,
     setIsLoadingEvents,
     setError,
-    cacheStatus,
     setCacheStatus,
   } = useStore();
 
   const [showFilters, setShowFilters] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadEvents() {
@@ -45,7 +45,8 @@ export default function ScheduleTab() {
 
         if (result.success) {
           setStockingEvents(result.data);
-          setCacheStatus(result.cache);
+          setCacheStatus(result.cache || { isCached: true, lastUpdated: result.lastUpdated });
+          setLastUpdated(result.lastUpdated);
         } else {
           setError(result.error || 'Failed to load stocking data');
         }
@@ -162,13 +163,13 @@ export default function ScheduleTab() {
 
   return (
     <div className="p-6">
-      {/* Header with cache status */}
+      {/* Header with database sync status */}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Trout Stocking Schedule</h2>
-          {cacheStatus?.isCached && (
+          {lastUpdated && (
             <p className="text-sm text-muted-foreground mt-1">
-              Last updated: {cacheStatus.lastUpdated ? format(new Date(cacheStatus.lastUpdated), 'PPp') : 'Unknown'}
+              Data last synced: {format(new Date(lastUpdated), 'PPp')}
             </p>
           )}
         </div>
