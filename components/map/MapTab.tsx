@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
-import { useStore } from '../../lib/store';
-import { ARCGIS_SERVICE_URL, LAYER_IDS, LAYER_NAMES, LAYER_STYLES, BASE_MAPS } from '../../lib/arcgis-config';
-import { fetchAllArcGISLayers, TroutStream, StockingLocation, PublicLake } from '../../lib/arcgis-client';
+import { useStore } from '@/lib/store';
+import { ARCGIS_SERVICE_URL, LAYER_IDS, LAYER_NAMES, LAYER_STYLES, BASE_MAPS } from '@/lib/arcgis-config';
+import { fetchAllArcGISLayers, TroutStream, StockingLocation, PublicLake } from '@/lib/arcgis-client';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
