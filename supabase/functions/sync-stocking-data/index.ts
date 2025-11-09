@@ -153,6 +153,57 @@ function formatDateForURL(date) {
   return `${month} ${day}, ${year}`;
 }
 
+function parseSpeciesString(speciesText) {
+  if (!speciesText || speciesText.trim() === '') {
+    return [];
+  }
+
+  // Known trout species in order of longest to shortest for proper matching
+  const validSpecies = [
+    'Rainbow Trout',
+    'Brown Trout',
+    'Brook Trout',
+    'Tiger Trout',
+    'Golden Trout',
+  ];
+
+  const parsed = [];
+  let remaining = speciesText.trim();
+
+  // First try splitting by common delimiters
+  if (remaining.includes('+') || remaining.includes('/') || remaining.includes(',')) {
+    const parts = remaining.split(/[+\/,]/);
+    for (const part of parts) {
+      const normalized = normalizeSpecies(part.trim());
+      if (normalized && !parsed.includes(normalized)) {
+        parsed.push(normalized);
+      }
+    }
+    return parsed.length > 0 ? parsed : [speciesText];
+  }
+
+  // Handle concatenated species (no delimiters)
+  // Try to match each known species in the string
+  for (const species of validSpecies) {
+    const index = remaining.indexOf(species);
+    if (index !== -1) {
+      parsed.push(species);
+      // Remove the matched species from remaining text
+      remaining = remaining.substring(0, index) + remaining.substring(index + species.length);
+    }
+  }
+
+  // If we found species, return them
+  // Otherwise, try to normalize the original string
+  if (parsed.length > 0) {
+    return parsed;
+  }
+
+  // Fallback: try to normalize the entire string
+  const normalized = normalizeSpecies(speciesText);
+  return [normalized];
+}
+
 function normalizeSpecies(species) {
   const normalized = species.trim().toLowerCase();
 
@@ -277,17 +328,16 @@ async function scrapeStockingData(startDateStr, endDateStr) {
         if (!date) continue;
 
         const speciesText = speciesIdx !== -1 ? cellValues[speciesIdx] : 'Unknown';
-        const speciesList = speciesText
-          .split(/[+\/,]/)
-          .map(s => normalizeSpecies(s))
-          .filter(s => s && s !== 'Unknown')
-          .join(' + ');
+        
+        // Parse species (handles both delimited and concatenated formats)
+        const speciesList = parseSpeciesString(speciesText);
+        const speciesStr = speciesList.length > 0 ? speciesList.join(' + ') : 'Unknown';
 
         const event = {
           id: `${waterBody}-${date}-${i}`.replace(/\s+/g, '-').toLowerCase(),
           waterBody,
           county: countyIdx !== -1 ? cellValues[countyIdx] : 'Unknown',
-          species: speciesList || 'Unknown',
+          species: speciesStr,
           date,
           numberOfFish: numberIdx !== -1 ? extractNumber(cellValues[numberIdx]) : undefined,
           category: categoryIdx !== -1 ? cellValues[categoryIdx] : undefined,

@@ -6,6 +6,61 @@ import { StockingEvent } from './types';
 const STOCKING_SCHEDULE_URL = 'https://dwr.virginia.gov/fishing/trout-stocking-schedule/';
 
 /**
+ * Parse concatenated species string to separate individual species
+ * Handles cases like "Rainbow TroutBrown TroutBrook Trout"
+ */
+function parseSpeciesString(speciesText: string): string[] {
+  if (!speciesText || speciesText.trim() === '') {
+    return [];
+  }
+
+  // Known trout species in order of longest to shortest for proper matching
+  const validSpecies = [
+    'Rainbow Trout',
+    'Brown Trout',
+    'Brook Trout',
+    'Tiger Trout',
+    'Golden Trout',
+  ];
+
+  const parsed: string[] = [];
+  let remaining = speciesText.trim();
+
+  // First try splitting by common delimiters
+  if (remaining.includes('+') || remaining.includes('/') || remaining.includes(',')) {
+    const parts = remaining.split(/[+\/,]/);
+    for (const part of parts) {
+      const normalized = normalizeSpecies(part.trim());
+      if (normalized && !parsed.includes(normalized)) {
+        parsed.push(normalized);
+      }
+    }
+    return parsed.length > 0 ? parsed : [speciesText];
+  }
+
+  // Handle concatenated species (no delimiters)
+  // Try to match each known species in the string
+  for (const species of validSpecies) {
+    const index = remaining.indexOf(species);
+    if (index !== -1) {
+      parsed.push(species);
+      // Remove the matched species from remaining text
+      remaining = remaining.substring(0, index) + remaining.substring(index + species.length);
+    }
+  }
+
+  // If we found species, return them joined
+  // Otherwise, try to normalize the original string
+  if (parsed.length > 0) {
+    return parsed;
+  }
+
+  // Fallback: try to normalize the entire string
+  const normalized = normalizeSpecies(speciesText);
+  return [normalized];
+}
+
+/**
  * Normalize species names to handle variations
  */
 function normalizeSpecies(species: string): string {
@@ -210,21 +265,18 @@ export async function scrapeStockingData(): Promise<StockingEvent[]> {
           const date = parseDate(dateStr);
           if (!date) continue;
 
-          // Extract species - may contain multiple species separated by +, /, or commas
+          // Extract species - may contain multiple species separated by +, /, commas, or concatenated
           const speciesText = indices.species !== -1 ? cells[indices.species]?.text.trim() : 'Unknown';
           
-          // Parse multiple species if separated
-          const speciesList = speciesText
-            .split(/[+\/,]/)
-            .map(s => normalizeSpecies(s))
-            .filter(s => s && s !== 'Unknown')
-            .join(' + ');
+          // Parse species (handles both delimited and concatenated formats)
+          const speciesList = parseSpeciesString(speciesText);
+          const speciesStr = speciesList.length > 0 ? speciesList.join(' + ') : 'Unknown';
 
           const event: StockingEvent = {
             id: `${waterBody}-${date}-${i}`.replace(/\s+/g, '-').toLowerCase(),
             waterBody,
             county: indices.county !== -1 ? cells[indices.county]?.text.trim() : 'Unknown',
-            species: speciesList || 'Unknown',
+            species: speciesStr,
             date,
           };
 
