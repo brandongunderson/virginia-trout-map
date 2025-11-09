@@ -1,7 +1,12 @@
 {
   "buildCommand": "pnpm build",
-  "devCommand": "pnpm dev",
+  "devCommand": "pnpm dev", 
   "installCommand": "pnpm install",
   "framework": "nextjs",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "build": {
+    "env": {
+      "NODE_OPTIONS": "--max-old-space-size=4096"
+    }
+  }
 }

@@ -2,6 +2,9 @@
   "name": "virginia-trout-map",
   "version": "0.1.0",
   "private": true,
+  "exports": {
+    "@/*": "./*"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
