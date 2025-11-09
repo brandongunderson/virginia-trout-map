@@ -1,13 +1,13 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useStore } from '@/lib/store';
-import TabNavigation from '@/components/ui/TabNavigation';
-import ScheduleTab from '@/components/schedule/ScheduleTab';
-import WatersTab from '@/components/waters/WatersTab';
+import { useStore } from '../lib/store';
+import TabNavigation from '../components/ui/TabNavigation';
+import ScheduleTab from '../components/schedule/ScheduleTab';
+import WatersTab from '../components/waters/WatersTab';
 
 // Dynamic import for MapTab to avoid SSR issues with Leaflet
-const MapTab = dynamic(() => import('@/components/map/MapTab'), {
+const MapTab = dynamic(() => import('../components/map/MapTab'), {
   ssr: false,
   loading: () => (
     <div className="h-[600px] flex items-center justify-center bg-gray-50">

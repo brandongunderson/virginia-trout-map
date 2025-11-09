@@ -1,7 +1,7 @@
 // Server-side API route for ArcGIS MapServer proxy
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ARCGIS_SERVICE_URL, QUERY_PARAMS } from '@/lib/arcgis-config';
+import { ARCGIS_SERVICE_URL, QUERY_PARAMS } from '../../lib/arcgis-config';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

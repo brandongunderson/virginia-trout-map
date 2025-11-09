@@ -3,14 +3,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { Download, Filter } from 'lucide-react';
-import { useStore } from '@/lib/store';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+import { useStore } from '../../lib/store';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Card } from './ui/card';
+import { Checkbox } from './ui/checkbox';
+import { Label } from './ui/label';
 import { createClient } from '@supabase/supabase-js';
-import { StockingEvent } from '@/lib/types';
+import { StockingEvent } from '../../lib/types';
 
 // Initialize Supabase client
 const supabase = createClient(
