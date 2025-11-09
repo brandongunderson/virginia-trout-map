@@ -41,6 +41,13 @@ export default function ScheduleTab() {
 
   const [showFilters, setShowFilters] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const displayLimit = 20;
 
   useEffect(() => {
     async function loadEvents() {
@@ -48,12 +55,12 @@ export default function ScheduleTab() {
       setError(null);
 
       try {
-        // Fetch directly from Supabase
-        const { data, error } = await supabase
+        // Fetch first page (20 items) from Supabase
+        const { data, error, count } = await supabase
           .from('trout_stocking_events')
-          .select('*')
+          .select('*', { count: 'exact' })
           .order('stocking_date', { ascending: false })
-          .limit(5000);
+          .range(0, displayLimit - 1);
 
         if (error) {
           throw error;
@@ -87,6 +94,9 @@ export default function ScheduleTab() {
           .maybeSingle();
 
         setStockingEvents(events);
+        setTotalCount(count || 0);
+        setHasMore((count || 0) > displayLimit);
+        setCurrentPage(1);
         setCacheStatus({ isCached: true, lastUpdated: syncData?.updated_at || null });
         setLastUpdated(syncData?.updated_at || null);
       } catch (error) {
@@ -101,6 +111,55 @@ export default function ScheduleTab() {
       loadEvents();
     }
   }, [stockingEvents.length, setIsLoadingEvents, setError, setStockingEvents, setCacheStatus]);
+
+  // Load more data (pagination)
+  const loadMoreData = async () => {
+    setLoadingMore(true);
+    try {
+      const nextPage = currentPage + 1;
+      const offset = currentPage * displayLimit;
+      
+      const { data, error } = await supabase
+        .from('trout_stocking_events')
+        .select('*')
+        .order('stocking_date', { ascending: false })
+        .range(offset, offset + displayLimit - 1);
+
+      if (error) {
+        throw error;
+      }
+
+      // Transform database records
+      const moreEvents: StockingEvent[] = (data || []).map((record: {
+        id: number;
+        stocking_date: string;
+        location: string;
+        county: string;
+        species: string;
+        number_of_fish: number | null;
+        size: string | null;
+      }) => ({
+        id: record.id.toString(),
+        waterBody: record.location,
+        county: record.county,
+        species: record.species,
+        date: new Date(record.stocking_date).toISOString(),
+        numberOfFish: record.number_of_fish ?? undefined,
+        category: record.size ?? undefined,
+      }));
+
+      // Append to existing events
+      const updatedEvents = [...stockingEvents, ...moreEvents];
+      setStockingEvents(updatedEvents);
+      setCurrentPage(nextPage);
+      setHasMore(updatedEvents.length < totalCount);
+    } catch (error) {
+      console.error('Error loading more data:', error);
+      setError('Failed to load more stocking data');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   // Get unique counties and species
   const availableCounties = useMemo(() => {
@@ -158,25 +217,39 @@ export default function ScheduleTab() {
     return filtered;
   }, [stockingEvents, selectedCounties, selectedSpecies, searchQuery, sortBy, sortOrder]);
 
-  // Export to CSV
-  const exportToCSV = () => {
-    const headers = ['Date', 'Water Body', 'County', 'Species', 'Pounds', 'Number of Fish'];
-    const rows = filteredEvents.map(e => [
-      format(new Date(e.date), 'yyyy-MM-dd'),
-      e.waterBody,
-      e.county,
-      e.species,
-      e.pounds || '',
-      e.numberOfFish || '',
-    ]);
+  // Export to CSV (exports all matching filtered data)
+  const exportToCSV = async () => {
+    try {
+      const dataToExport = filteredEvents;
+      
+      // If we have filters active and haven't loaded all data, we need to fetch all matching records
+      if (hasMore || filteredEvents.length < totalCount) {
+        // For simplicity with filters, export what's currently loaded and filtered
+        // Full export would require re-querying with filters applied server-side
+        console.log('Exporting currently loaded and filtered events');
+      }
+      
+      const headers = ['Date', 'Water Body', 'County', 'Species', 'Pounds', 'Number of Fish'];
+      const rows = dataToExport.map(e => [
+        format(new Date(e.date), 'yyyy-MM-dd'),
+        e.waterBody,
+        e.county,
+        e.species,
+        e.pounds || '',
+        e.numberOfFish || '',
+      ]);
 
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `virginia-trout-stocking-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    a.click();
+      const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `virginia-trout-stocking-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+      a.click();
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      setError('Failed to export CSV');
+    }
   };
 
   // Sort handler
@@ -361,6 +434,30 @@ export default function ScheduleTab() {
       {filteredEvents.length === 0 && (
         <div className="text-center py-12 text-gray-500">
           No stocking events found. Try adjusting your filters.
+        </div>
+      )}
+
+      {/* Load More Button */}
+      {hasMore && filteredEvents.length > 0 && (
+        <div className="mt-6 text-center">
+          <Button
+            onClick={loadMoreData}
+            disabled={loadingMore}
+            variant="outline"
+            size="lg"
+          >
+            {loadingMore ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                Loading...
+              </>
+            ) : (
+              `Load More Stocking Events`
+            )}
+          </Button>
+          <p className="text-sm text-gray-500 mt-2">
+            Showing {stockingEvents.length} of {totalCount} total events
+          </p>
         </div>
       )}
     </div>

@@ -2,8 +2,8 @@
 
 import { GeoJSONData, GeoJSONFeature, LayerType, LayerData } from './types';
 
-// Virginia DWR ArcGIS FeatureServer URLs
-const ARCGIS_BASE_URL = 'https://gis.dgif.virginia.gov/fos/rest/services/VMDB/Public_VMDB/FeatureServer';
+// Virginia DWR ArcGIS MapServer URLs (TroutApp service)
+const ARCGIS_BASE_URL = 'https://services.dwr.virginia.gov/arcgis/rest/services/Projects/TroutApp/MapServer';
 
 const LAYER_URLS = {
   'stocked-streams': `${ARCGIS_BASE_URL}/0/query`,
