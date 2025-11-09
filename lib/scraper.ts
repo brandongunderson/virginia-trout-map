@@ -171,13 +171,13 @@ function formatDateForURL(date: Date): string {
  */
 export async function scrapeStockingData(): Promise<StockingEvent[]> {
   try {
-    // Try to get maximum historical data
-    // Start from January 1, 2015 (10 years of history) and extend to 1 year in the future for upcoming stockings
+    // Try to get maximum historical data (up to current date only)
+    // Start from January 1, 2021 (4+ years of history) to current date
     const currentDate = new Date();
-    const startDate = new Date(2015, 0, 1); // January 1, 2015 - maximize historical data
+    const startDate = new Date(2021, 0, 1); // January 1, 2021 - good historical coverage
     
     const endDate = new Date(currentDate);
-    endDate.setFullYear(currentDate.getFullYear() + 1); // 1 year future for scheduled stockings
+    endDate.setDate(currentDate.getDate()); // Only up to current date (no future dates)
     
     const startDateStr = formatDateForURL(startDate);
     const endDateStr = formatDateForURL(endDate);

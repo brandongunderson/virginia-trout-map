@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     const startDate = new Date(currentDate);
     startDate.setDate(currentDate.getDate() - 60); // 60 days back
     const endDate = new Date(currentDate);
-    endDate.setFullYear(currentDate.getFullYear() + 1); // 1 year future
+    endDate.setDate(currentDate.getDate()); // Only up to current date (no future dates)
 
     const startDateStr = formatDateForURL(startDate);
     const endDateStr = formatDateForURL(endDate);
