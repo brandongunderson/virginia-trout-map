@@ -1,0 +1,81 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-79.9630, 37.3270],
+          [-79.9600, 37.3270],
+          [-79.9600, 37.3240],
+          [-79.9630, 37.3240],
+          [-79.9630, 37.3270]
+        ]]
+      },
+      "properties": {
+        "name": "Lake Moomaw",
+        "county": "Alleghany County",
+        "species": "Rainbow Trout, Brown Trout",
+        "type": "Stocked Lake"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-77.4430, 37.5407],
+          [-77.4400, 37.5407],
+          [-77.4400, 37.5380],
+          [-77.4430, 37.5380],
+          [-77.4430, 37.5407]
+        ]]
+      },
+      "properties": {
+        "name": "Lake Shields",
+        "county": "City of Richmond",
+        "species": "Rainbow Trout, Brown Trout, Tiger Trout",
+        "type": "Stocked Lake"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-78.5620, 37.2950],
+          [-78.5590, 37.2950],
+          [-78.5590, 37.2920],
+          [-78.5620, 37.2920],
+          [-78.5620, 37.2950]
+        ]]
+      },
+      "properties": {
+        "name": "Ivy Creek Park Pond",
+        "county": "City of Lynchburg",
+        "species": "Rainbow Trout, Brown Trout",
+        "type": "Stocked Lake"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-77.5180, 37.6250],
+          [-77.5150, 37.6250],
+          [-77.5150, 37.6220],
+          [-77.5180, 37.6220],
+          [-77.5180, 37.6250]
+        ]]
+      },
+      "properties": {
+        "name": "Dorey Park Lake",
+        "county": "Henrico County",
+        "species": "Rainbow Trout, Brown Trout, Tiger Trout",
+        "type": "Stocked Lake"
+      }
+    }
+  ]
+}

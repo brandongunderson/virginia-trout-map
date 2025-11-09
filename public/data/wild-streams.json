@@ -1,0 +1,73 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-79.5333, 37.8000],
+          [-79.5400, 37.8100],
+          [-79.5500, 37.8200]
+        ]
+      },
+      "properties": {
+        "name": "Mossy Creek",
+        "county": "Augusta County",
+        "species": "Brook Trout, Brown Trout",
+        "type": "Wild Trout Stream"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-78.4350, 38.4200],
+          [-78.4400, 38.4300],
+          [-78.4500, 38.4400]
+        ]
+      },
+      "properties": {
+        "name": "Rose River",
+        "county": "Madison County",
+        "species": "Brook Trout",
+        "type": "Wild Trout Stream"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-78.7720, 38.3170],
+          [-78.7800, 38.3250],
+          [-78.7900, 38.3350]
+        ]
+      },
+      "properties": {
+        "name": "Whiteoak Canyon",
+        "county": "Page County",
+        "species": "Brook Trout",
+        "type": "Wild Trout Stream"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-81.5125, 36.9200],
+          [-81.5200, 36.9300],
+          [-81.5300, 36.9400]
+        ]
+      },
+      "properties": {
+        "name": "Big Tumbling Creek",
+        "county": "Washington County",
+        "species": "Brook Trout",
+        "type": "Wild Trout Stream"
+      }
+    }
+  ]
+}

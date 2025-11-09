@@ -1,0 +1,107 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-79.0583, 37.2707],
+          [-79.0650, 37.2800],
+          [-79.0720, 37.2900]
+        ]
+      },
+      "properties": {
+        "name": "James River",
+        "county": "Rockbridge County",
+        "species": "Rainbow Trout, Brown Trout",
+        "type": "Stocked Stream"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-78.8394, 38.0293],
+          [-78.8500, 38.0400],
+          [-78.8600, 38.0500]
+        ]
+      },
+      "properties": {
+        "name": "Rapidan River",
+        "county": "Madison County",
+        "species": "Rainbow Trout, Brook Trout",
+        "type": "Stocked Stream"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-79.4428, 37.7833],
+          [-79.4500, 37.7900],
+          [-79.4600, 37.8000]
+        ]
+      },
+      "properties": {
+        "name": "Maury River",
+        "county": "Rockbridge County",
+        "species": "Rainbow Trout",
+        "type": "Stocked Stream"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-80.0442, 37.2298],
+          [-80.0500, 37.2400],
+          [-80.0600, 37.2500]
+        ]
+      },
+      "properties": {
+        "name": "New River",
+        "county": "Giles County",
+        "species": "Rainbow Trout, Brown Trout",
+        "type": "Stocked Stream"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-78.1694, 38.7090],
+          [-78.1750, 38.7150],
+          [-78.1800, 38.7200]
+        ]
+      },
+      "properties": {
+        "name": "Shenandoah River (South Fork)",
+        "county": "Page County",
+        "species": "Rainbow Trout, Brown Trout",
+        "type": "Stocked Stream"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-81.9773, 36.7579],
+          [-81.9850, 36.7650],
+          [-81.9900, 36.7700]
+        ]
+      },
+      "properties": {
+        "name": "South Fork Holston River",
+        "county": "Smyth County",
+        "species": "Rainbow Trout",
+        "type": "Stocked Stream"
+      }
+    }
+  ]
+}
