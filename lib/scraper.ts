@@ -66,6 +66,7 @@ function extractNumber(text: string): number | undefined {
 async function fetchStockingDataWithDateRange(startDate: string, endDate: string): Promise<string> {
   try {
     // The form uses GET method with query parameters
+    // Date format expected by DWR: "Month+DD%2C+YYYY" (e.g., "January+1%2C+2020")
     const url = new URL(STOCKING_SCHEDULE_URL);
     url.searchParams.set('start_date', startDate);
     url.searchParams.set('end_date', endDate);
@@ -93,28 +94,45 @@ async function fetchStockingDataWithDateRange(startDate: string, endDate: string
 }
 
 /**
+ * Convert Date to DWR URL format: "Month+DD%2C+YYYY"
+ */
+function formatDateForURL(date: Date): string {
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  
+  const month = months[date.getMonth()];
+  const day = date.getDate();
+  const year = date.getFullYear();
+  
+  // Format: "Month+DD%2C+YYYY" (e.g., "January+1%2C+2020")
+  // Note: %2C is the URL-encoded comma, but we'll let URLSearchParams handle encoding
+  return `${month} ${day}, ${year}`;
+}
+
+/**
  * Scrape stocking schedule data with date range search for maximum historical data
  */
 export async function scrapeStockingData(): Promise<StockingEvent[]> {
   try {
     // Try to get maximum historical data
-    // Start from 5 years ago and extend to 1 year in the future for upcoming stockings
+    // Start from January 1, 2015 (10 years of history) and extend to 1 year in the future for upcoming stockings
     const currentDate = new Date();
-    const startDate = new Date(currentDate);
-    startDate.setFullYear(currentDate.getFullYear() - 5); // 5 years of history
+    const startDate = new Date(2015, 0, 1); // January 1, 2015 - maximize historical data
     
     const endDate = new Date(currentDate);
     endDate.setFullYear(currentDate.getFullYear() + 1); // 1 year future for scheduled stockings
     
-    const startDateStr = startDate.toISOString().split('T')[0]; // YYYY-MM-DD
-    const endDateStr = endDate.toISOString().split('T')[0];
+    const startDateStr = formatDateForURL(startDate);
+    const endDateStr = formatDateForURL(endDate);
 
     console.log(`Fetching stocking data from ${startDateStr} to ${endDateStr}...`);
 
     let html: string;
     
     try {
-      // Try POST request with date range first (gets maximum data)
+      // Try GET request with date range first (gets maximum data)
       html = await fetchStockingDataWithDateRange(startDateStr, endDateStr);
     } catch (error) {
       console.log('Date range search failed, falling back to default page scrape:', error);

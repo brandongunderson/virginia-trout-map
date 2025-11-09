@@ -144,7 +144,8 @@ export default function ScheduleTab() {
     if (sortBy === column) {
       setSorting(column, sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      setSorting(column, 'asc');
+      // Default to descending for date column (newest first), ascending for others
+      setSorting(column, column === 'date' ? 'desc' : 'asc');
     }
   };
 

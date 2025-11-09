@@ -3,12 +3,12 @@
 import { GeoJSONData, GeoJSONFeature, LayerType, LayerData } from './types';
 
 // Virginia DWR ArcGIS FeatureServer URLs
-const ARCGIS_BASE_URL = 'https://gis.dgif.virginia.gov/server/rest/services';
+const ARCGIS_BASE_URL = 'https://gis.dgif.virginia.gov/fos/rest/services/VMDB/Public_VMDB/FeatureServer';
 
 const LAYER_URLS = {
-  'stocked-streams': `${ARCGIS_BASE_URL}/Virginia_Trout_Stocked_Streams/FeatureServer/0/query`,
-  'stocked-lakes': `${ARCGIS_BASE_URL}/Virginia_Trout_Stocked_Lakes/FeatureServer/0/query`,
-  'wild-streams': `${ARCGIS_BASE_URL}/Virginia_Trout_Wild_Streams/FeatureServer/0/query`,
+  'stocked-streams': `${ARCGIS_BASE_URL}/0/query`,
+  'stocked-lakes': `${ARCGIS_BASE_URL}/1/query`,
+  'wild-streams': `${ARCGIS_BASE_URL}/2/query`,
 };
 
 /**
