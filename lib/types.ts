@@ -31,6 +31,7 @@ export interface StockingEvent {
   pounds?: number;
   numberOfFish?: number;
   waterType?: 'stream' | 'lake';
+  category?: string; // Category A, B, DH, U, etc.
 }
 
 export interface CacheEntry<T> {

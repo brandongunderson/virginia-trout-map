@@ -119,7 +119,7 @@ export const useStore = create<AppState>((set) => ({
 
   // Sort
   sortBy: 'date',
-  sortOrder: 'asc',
+  sortOrder: 'desc', // Default to newest first
   setSorting: (by, order) => set({ sortBy: by, sortOrder: order }),
 
   // Cache

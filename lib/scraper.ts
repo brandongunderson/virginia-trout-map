@@ -20,6 +20,8 @@ function normalizeSpecies(species: string): string {
     'brook trout': 'Brook Trout',
     'golden': 'Golden Trout',
     'golden trout': 'Golden Trout',
+    'tiger': 'Tiger Trout',
+    'tiger trout': 'Tiger Trout',
   };
 
   return speciesMap[normalized] || species;
@@ -59,13 +61,23 @@ function extractNumber(text: string): number | undefined {
 }
 
 /**
- * Scrape stocking schedule data with multiple fallback strategies
+ * Fetch stocking data with date range search for maximum historical data
  */
-export async function scrapeStockingData(): Promise<StockingEvent[]> {
+async function fetchStockingDataWithDateRange(startDate: string, endDate: string): Promise<string> {
   try {
-    const response = await fetch(STOCKING_SCHEDULE_URL, {
+    // The form uses GET method with query parameters
+    const url = new URL(STOCKING_SCHEDULE_URL);
+    url.searchParams.set('start_date', startDate);
+    url.searchParams.set('end_date', endDate);
+
+    console.log(`Requesting URL: ${url.toString()}`);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Referer': STOCKING_SCHEDULE_URL,
       },
     });
 
@@ -73,9 +85,54 @@ export async function scrapeStockingData(): Promise<StockingEvent[]> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const html = await response.text();
-    const root = parse(html);
+    return await response.text();
+  } catch (error) {
+    console.error('Error fetching with date range:', error);
+    throw error;
+  }
+}
 
+/**
+ * Scrape stocking schedule data with date range search for maximum historical data
+ */
+export async function scrapeStockingData(): Promise<StockingEvent[]> {
+  try {
+    // Try to get maximum historical data
+    // Start from 5 years ago and extend to 1 year in the future for upcoming stockings
+    const currentDate = new Date();
+    const startDate = new Date(currentDate);
+    startDate.setFullYear(currentDate.getFullYear() - 5); // 5 years of history
+    
+    const endDate = new Date(currentDate);
+    endDate.setFullYear(currentDate.getFullYear() + 1); // 1 year future for scheduled stockings
+    
+    const startDateStr = startDate.toISOString().split('T')[0]; // YYYY-MM-DD
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    console.log(`Fetching stocking data from ${startDateStr} to ${endDateStr}...`);
+
+    let html: string;
+    
+    try {
+      // Try POST request with date range first (gets maximum data)
+      html = await fetchStockingDataWithDateRange(startDateStr, endDateStr);
+    } catch (error) {
+      console.log('Date range search failed, falling back to default page scrape:', error);
+      // Fallback to simple GET request
+      const response = await fetch(STOCKING_SCHEDULE_URL, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      html = await response.text();
+    }
+
+    const root = parse(html);
     const events: StockingEvent[] = [];
 
     // Strategy 1: Look for table with class containing "stocking" or "schedule"
@@ -103,9 +160,10 @@ export async function scrapeStockingData(): Promise<StockingEvent[]> {
       
       const indices = {
         date: headerTexts.findIndex(h => h.includes('date') || h.includes('when')),
-        waterBody: headerTexts.findIndex(h => h.includes('water') || h.includes('location') || h.includes('stream') || h.includes('lake')),
+        waterBody: headerTexts.findIndex(h => h.includes('water') || h.includes('location') || h.includes('stream') || h.includes('lake') || h.includes('waterbody')),
         county: headerTexts.findIndex(h => h.includes('county')),
-        species: headerTexts.findIndex(h => h.includes('species') || h.includes('fish')),
+        species: headerTexts.findIndex(h => h.includes('species') || h.includes('fish') || h.includes('stocked')),
+        category: headerTexts.findIndex(h => h.includes('category') || h.includes('cat')),
         pounds: headerTexts.findIndex(h => h.includes('pound') || h.includes('lbs') || h.includes('weight')),
         number: headerTexts.findIndex(h => h.includes('number') || h.includes('count') || h.includes('qty')),
       };
@@ -114,6 +172,9 @@ export async function scrapeStockingData(): Promise<StockingEvent[]> {
       if (indices.date === -1 || indices.waterBody === -1) {
         continue;
       }
+
+      console.log(`Found table with headers:`, headerTexts);
+      console.log(`Column indices:`, indices);
 
       // Process data rows (skip header)
       for (let i = 1; i < rows.length; i++) {
@@ -131,11 +192,21 @@ export async function scrapeStockingData(): Promise<StockingEvent[]> {
           const date = parseDate(dateStr);
           if (!date) continue;
 
+          // Extract species - may contain multiple species separated by +, /, or commas
+          const speciesText = indices.species !== -1 ? cells[indices.species]?.text.trim() : 'Unknown';
+          
+          // Parse multiple species if separated
+          const speciesList = speciesText
+            .split(/[+\/,]/)
+            .map(s => normalizeSpecies(s))
+            .filter(s => s && s !== 'Unknown')
+            .join(' + ');
+
           const event: StockingEvent = {
             id: `${waterBody}-${date}-${i}`.replace(/\s+/g, '-').toLowerCase(),
             waterBody,
             county: indices.county !== -1 ? cells[indices.county]?.text.trim() : 'Unknown',
-            species: indices.species !== -1 ? normalizeSpecies(cells[indices.species]?.text || 'Unknown') : 'Unknown',
+            species: speciesList || 'Unknown',
             date,
           };
 
@@ -145,6 +216,9 @@ export async function scrapeStockingData(): Promise<StockingEvent[]> {
           }
           if (indices.number !== -1 && cells[indices.number]) {
             event.numberOfFish = extractNumber(cells[indices.number].text);
+          }
+          if (indices.category !== -1 && cells[indices.category]) {
+            event.category = cells[indices.category].text.trim();
           }
 
           events.push(event);

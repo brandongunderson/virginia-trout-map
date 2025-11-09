@@ -88,41 +88,60 @@ async function fetchLayerData(layerType: LayerType): Promise<GeoJSONData> {
 }
 
 /**
- * Fetch all GeoJSON layers simultaneously
+ * Fetch all GeoJSON layers simultaneously with individual error handling
  */
 export async function fetchAllGeoJSONData(): Promise<LayerData[]> {
   const layerTypes: LayerType[] = ['stocked-streams', 'stocked-lakes', 'wild-streams'];
   
-  try {
-    // Fetch all layers in parallel
-    const results = await Promise.all(
-      layerTypes.map(async (type) => {
+  // Fetch all layers in parallel with individual error handling
+  const results = await Promise.all(
+    layerTypes.map(async (type) => {
+      try {
         const data = await fetchLayerData(type);
+        console.log(`✓ Successfully fetched ${type} from external API`);
         return {
           type,
           data,
           lastUpdated: new Date().toISOString(),
         };
-      })
-    );
+      } catch {
+        console.log(`✗ External API failed for ${type}, falling back to local data`);
+        // Fallback to local data for this specific layer
+        try {
+          return await fetchLocalGeoJSONData(type);
+        } catch (localError) {
+          console.error(`✗ Failed to load local data for ${type}:`, localError);
+          throw new Error(`Failed to load ${type}: external API and local fallback both failed`);
+        }
+      }
+    })
+  );
 
-    return results;
-  } catch (error) {
-    console.error('Error fetching GeoJSON data:', error);
-    throw error;
-  }
+  return results;
 }
 
 /**
- * Fetch a single layer's GeoJSON data
+ * Fetch a single layer's GeoJSON data with fallback
  */
 export async function fetchGeoJSONData(layerType: LayerType): Promise<LayerData> {
-  const data = await fetchLayerData(layerType);
-  return {
-    type: layerType,
-    data,
-    lastUpdated: new Date().toISOString(),
-  };
+  try {
+    const data = await fetchLayerData(layerType);
+    console.log(`✓ Successfully fetched ${layerType} from external API`);
+    return {
+      type: layerType,
+      data,
+      lastUpdated: new Date().toISOString(),
+    };
+  } catch {
+    console.log(`✗ External API failed for ${layerType}, falling back to local data`);
+    // Fallback to local data
+    try {
+      return await fetchLocalGeoJSONData(layerType);
+    } catch (localError) {
+      console.error(`✗ Failed to load local data for ${layerType}:`, localError);
+      throw new Error(`Failed to load ${layerType}: external API and local fallback both failed`);
+    }
+  }
 }
 
 /**
@@ -136,18 +155,35 @@ export async function fetchLocalGeoJSONData(layerType: LayerType): Promise<Layer
   };
 
   try {
-    const response = await fetch(`http://localhost:3000${fileMap[layerType]}`);
-    if (!response.ok) {
-      throw new Error(`Failed to load local data: ${response.status}`);
+    // Use dynamic import for Node.js environment (server-side)
+    if (typeof window === 'undefined') {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      
+      const filePath = path.join(process.cwd(), 'public', fileMap[layerType]);
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      const data = JSON.parse(fileContent);
+      
+      return {
+        type: layerType,
+        data,
+        lastUpdated: new Date().toISOString(),
+      };
+    } else {
+      // Client-side: use relative URL
+      const response = await fetch(fileMap[layerType]);
+      if (!response.ok) {
+        throw new Error(`Failed to load local data: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      return {
+        type: layerType,
+        data,
+        lastUpdated: new Date().toISOString(),
+      };
     }
-    
-    const data = await response.json();
-    
-    return {
-      type: layerType,
-      data,
-      lastUpdated: new Date().toISOString(),
-    };
   } catch (error) {
     console.error(`Error loading local ${layerType} data:`, error);
     throw error;

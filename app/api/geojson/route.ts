@@ -1,7 +1,7 @@
 // API endpoint for GeoJSON layer data with caching
 
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchAllGeoJSONData, fetchGeoJSONData, fetchLocalGeoJSONData, fetchAllLocalGeoJSONData } from '@/lib/api';
+import { fetchAllGeoJSONData, fetchGeoJSONData } from '@/lib/api';
 import { cache } from '@/lib/cache';
 import { LayerType, LayerData } from '@/lib/types';
 
@@ -27,12 +27,7 @@ export async function GET(request: NextRequest) {
       // If not cached, fetch fresh data
       if (!layerData) {
         console.log(`Fetching fresh GeoJSON data for ${layerParam}...`);
-        try {
-          layerData = await fetchGeoJSONData(layerParam);
-        } catch {
-          console.log(`External API failed, using local data for ${layerParam}`);
-          layerData = await fetchLocalGeoJSONData(layerParam);
-        }
+        layerData = await fetchGeoJSONData(layerParam);
         cache.set(cacheKey, layerData);
       }
 
@@ -56,12 +51,7 @@ export async function GET(request: NextRequest) {
 
       if (!allLayers) {
         console.log('Fetching fresh GeoJSON data for all layers...');
-        try {
-          allLayers = await fetchAllGeoJSONData();
-        } catch {
-          console.log('External API failed, using local data for all layers');
-          allLayers = await fetchAllLocalGeoJSONData();
-        }
+        allLayers = await fetchAllGeoJSONData();
         cache.set(cacheKey, allLayers);
       }
 
