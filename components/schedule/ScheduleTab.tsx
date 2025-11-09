@@ -4,11 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { Download, Filter } from 'lucide-react';
 import { useStore } from '../../lib/store';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Card } from './ui/card';
-import { Checkbox } from './ui/checkbox';
-import { Label } from './ui/label';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Card } from '../ui/card';
+import { Checkbox } from '../ui/checkbox';
+import { Label } from '../ui/label';
 import { createClient } from '@supabase/supabase-js';
 import { StockingEvent } from '../../lib/types';
 

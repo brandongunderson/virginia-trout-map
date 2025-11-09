@@ -1,9 +1,9 @@
 // API endpoint for GeoJSON layer data with caching
 
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchAllGeoJSONData, fetchGeoJSONData } from '../../lib/api';
-import { cache } from '../../lib/cache';
-import { LayerType, LayerData } from '../../lib/types';
+import { fetchAllGeoJSONData, fetchGeoJSONData } from '../../../lib/api';
+import { cache } from '../../../lib/cache';
+import { LayerType, LayerData } from '../../../lib/types';
 
 const CACHE_KEY_PREFIX = 'geojson-';
 

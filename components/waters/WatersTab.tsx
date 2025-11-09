@@ -3,9 +3,9 @@
 import { useMemo, useState } from 'react';
 import { MapPin, Calendar } from 'lucide-react';
 import { useStore } from '../../lib/store';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Input } from './ui/input';
-import { Badge } from './ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Input } from '../ui/input';
+import { Badge } from '../ui/badge';
 
 export default function WatersTab() {
   const { stockingEvents } = useStore();
