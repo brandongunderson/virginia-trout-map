@@ -9,6 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { createClient } from '@supabase/supabase-js';
+import { StockingEvent } from '@/lib/types';
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function ScheduleTab() {
   const {
@@ -40,16 +48,47 @@ export default function ScheduleTab() {
       setError(null);
 
       try {
-        const response = await fetch('/api/stocking-data');
-        const result = await response.json();
+        // Fetch directly from Supabase
+        const { data, error } = await supabase
+          .from('trout_stocking_events')
+          .select('*')
+          .order('stocking_date', { ascending: false })
+          .limit(5000);
 
-        if (result.success) {
-          setStockingEvents(result.data);
-          setCacheStatus(result.cache || { isCached: true, lastUpdated: result.lastUpdated });
-          setLastUpdated(result.lastUpdated);
-        } else {
-          setError(result.error || 'Failed to load stocking data');
+        if (error) {
+          throw error;
         }
+
+        // Transform database records to StockingEvent format
+        const events: StockingEvent[] = (data || []).map((record: {
+          id: number;
+          stocking_date: string;
+          location: string;
+          county: string;
+          species: string;
+          number_of_fish: number | null;
+          size: string | null;
+        }) => ({
+          id: record.id.toString(),
+          waterBody: record.location,
+          county: record.county,
+          species: record.species,
+          date: new Date(record.stocking_date).toISOString(),
+          numberOfFish: record.number_of_fish ?? undefined,
+          category: record.size ?? undefined,
+        }));
+
+        // Get last sync time
+        const { data: syncData } = await supabase
+          .from('trout_stocking_events')
+          .select('updated_at')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        setStockingEvents(events);
+        setCacheStatus({ isCached: true, lastUpdated: syncData?.updated_at || null });
+        setLastUpdated(syncData?.updated_at || null);
       } catch (error) {
         console.error('Error loading stocking events:', error);
         setError('Failed to load stocking data');
