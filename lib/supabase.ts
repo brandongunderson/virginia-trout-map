@@ -17,11 +17,12 @@ export function getSupabaseClient() {
     
     // Debug logging for troubleshooting
     console.log('Supabase client initialization:', {
-      envUrl: envUrl ? 'SET' : 'UNDEFINED',
+      envUrl: envUrl || 'UNDEFINED',
       envKey: envKey ? 'SET' : 'UNDEFINED',
       usingUrl: supabaseUrl === DEFAULT_SUPABASE_URL ? 'FALLBACK' : 'ENV',
       usingKey: supabaseAnonKey === DEFAULT_SUPABASE_ANON_KEY ? 'FALLBACK' : 'ENV',
-      url: supabaseUrl.substring(0, 30) + '...'
+      finalUrl: supabaseUrl,
+      finalKey: supabaseAnonKey.substring(0, 50) + '...'
     });
     
     if (!supabaseUrl || !supabaseAnonKey) {
