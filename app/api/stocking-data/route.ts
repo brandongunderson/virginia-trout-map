@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       .select('updated_at')
       .order('updated_at', { ascending: false })
       .limit(1)
-      .maybeSingle();
+      .maybeSingle() as { data: { updated_at: string } | null };
 
     return NextResponse.json({
       success: true,
