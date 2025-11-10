@@ -93,7 +93,7 @@ export default function ScheduleTab() {
         setTotalCount(count || 0);
         setHasMore((count || 0) > displayLimit);
         setCurrentPage(1);
-        setCacheStatus({ isCached: true, lastUpdated: syncData?.updated_at || null });
+        setCacheStatus({ isCached: true, lastUpdated: syncData?.updated_at || undefined });
         setLastUpdated(syncData?.updated_at || null);
       } catch (error) {
         console.error('Error loading stocking events:', error);
