@@ -33,6 +33,3 @@ export function getSupabaseClient() {
   
   return supabaseClient;
 }
-
-// Legacy export for backward compatibility (deprecated)
-export const supabase = getSupabaseClient();
