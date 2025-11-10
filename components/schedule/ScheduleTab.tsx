@@ -87,7 +87,7 @@ export default function ScheduleTab() {
           .select('updated_at')
           .order('updated_at', { ascending: false })
           .limit(1)
-          .maybeSingle();
+          .maybeSingle() as { data: { updated_at: string } | null };
 
         setStockingEvents(events);
         setTotalCount(count || 0);
