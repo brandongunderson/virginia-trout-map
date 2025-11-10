@@ -1,6 +1,7 @@
 # Virginia Trout Stocking Map
 
 A full-stack Next.js application for tracking Virginia trout stocking schedules and locations.
+*Updated: 2025-11-10 - Environment variables fix applied*
 
 ## Features
 
