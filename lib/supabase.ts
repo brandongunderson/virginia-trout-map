@@ -9,8 +9,20 @@ let supabaseClient: ReturnType<typeof createClient> | null = null;
 
 export function getSupabaseClient() {
   if (!supabaseClient) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
+    const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const envKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    const supabaseUrl = envUrl || DEFAULT_SUPABASE_URL;
+    const supabaseAnonKey = envKey || DEFAULT_SUPABASE_ANON_KEY;
+    
+    // Debug logging for troubleshooting
+    console.log('Supabase client initialization:', {
+      envUrl: envUrl ? 'SET' : 'UNDEFINED',
+      envKey: envKey ? 'SET' : 'UNDEFINED',
+      usingUrl: supabaseUrl === DEFAULT_SUPABASE_URL ? 'FALLBACK' : 'ENV',
+      usingKey: supabaseAnonKey === DEFAULT_SUPABASE_ANON_KEY ? 'FALLBACK' : 'ENV',
+      url: supabaseUrl.substring(0, 30) + '...'
+    });
     
     if (!supabaseUrl || !supabaseAnonKey) {
       throw new Error('Supabase environment variables are not configured');
