@@ -115,9 +115,10 @@ export async function GET(request: NextRequest) {
 // Trigger sync endpoint - calls the edge function to sync latest data
 export async function POST() {
   try {
+    // Access environment variables safely inside function
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
+    
     if (!supabaseUrl || !supabaseAnonKey) {
       throw new Error('Supabase environment variables are not configured');
     }

@@ -12,11 +12,17 @@ import { Label } from '../ui/label';
 import { createClient } from '@supabase/supabase-js';
 import { StockingEvent } from '../../lib/types';
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Helper function to create Supabase client safely
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase environment variables are not configured');
+  }
+  
+  return createClient(supabaseUrl, supabaseAnonKey);
+}
 
 export default function ScheduleTab() {
   const {
@@ -55,6 +61,8 @@ export default function ScheduleTab() {
       setError(null);
 
       try {
+        const supabase = getSupabaseClient();
+        
         // Fetch first page (20 items) from Supabase
         const { data, error, count } = await supabase
           .from('trout_stocking_events')
@@ -116,6 +124,7 @@ export default function ScheduleTab() {
   const loadMoreData = async () => {
     setLoadingMore(true);
     try {
+      const supabase = getSupabaseClient();
       const nextPage = currentPage + 1;
       const offset = currentPage * displayLimit;
       
