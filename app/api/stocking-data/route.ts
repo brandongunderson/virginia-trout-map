@@ -1,20 +1,8 @@
 // API endpoint for trout stocking schedule data from Supabase database
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '../../../lib/supabase';
 import { StockingEvent } from '../../../lib/types';
-
-// Helper function to create Supabase client safely
-function getSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase environment variables are not configured');
-  }
-  
-  return createClient(supabaseUrl, supabaseAnonKey);
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -115,13 +103,12 @@ export async function GET(request: NextRequest) {
 // Trigger sync endpoint - calls the edge function to sync latest data
 export async function POST() {
   try {
-    // Access environment variables safely inside function
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    // Get Supabase client for configuration
+    const supabase = getSupabaseClient();
     
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Supabase environment variables are not configured');
-    }
+    // Get URL and key from environment with fallbacks
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://wbiuuvzkjkbfrwpirxwg.supabase.co';
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndiaXV1dnpramtiZnJ3cGlyeHdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2NTcwMTUsImV4cCI6MjA3ODIzMzAxNX0.Rh0_xQBpscXtxQnZAN0--VAM0bIPlG87YDYeQ4PRD-c';
 
     // Call the sync edge function
     const response = await fetch(`${supabaseUrl}/functions/v1/sync-stocking-data`, {
